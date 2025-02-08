@@ -1,10 +1,11 @@
 version: '3.8'
 
 services:
-  postgress:
+  postgres:
     image: postgres:15
     container_name: postgres_db
     environment:
+      POSTGRES_ROOT_PASSWORD: admin
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: mydb
@@ -12,16 +13,51 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - my_network
     
   app:
     build: .
     container_name: nextjs_app
     ports:
-      - '3000:3000'
+      - "3000"
     environment:
-      - DATABASE_URL: postgresql://myuser:mypassword@[YOUR_SERVER_IP]:5432/mydb
+      DATABASE_URL: postgresql://myuser:mypassword@postgres:5432/mydb  # Change localhost to postgres
     depends_on:
       - postgres
+    networks:
+      - my_network
+
+
+  pgadmin-school:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin-school
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - my_network
+
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"  # Expose Nginx on port 80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+    networks:
+      - my_network
 
 volumes:
   postgres_data:
+
+networks:
+  my_network:
