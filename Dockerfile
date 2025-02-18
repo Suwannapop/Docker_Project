@@ -1,4 +1,3 @@
-# Use Node.js as the base image
 FROM node:18
 
 # Set the working directory inside the container
@@ -13,14 +12,13 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-# Build the Next.js application
+# generate prisma client schema
 RUN npx prisma generate
 
 RUN npm run build
 
-
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start the application and run Prisma migration before starting the app
-CMD ["sh", "-c", "npx prisma migrate dev --name init && npm start"]
+# เปิด shell แล้วรันคำสั่ง npx prisma migrate dev --name init และ npm start
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]

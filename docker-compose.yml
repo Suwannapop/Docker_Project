@@ -1,33 +1,31 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15
     container_name: postgres_db
     environment:
-      POSTGRES_ROOT_PASSWORD: admin
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: mydb
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - my_network
-    
+      - db_network
+
   app:
-    build: .
+    # build: .
+    image: supakornsupakorn/schoolmange
     container_name: nextjs_app
     ports:
-      - "3000"
+      - "3000" # ไม่ต้องใส่ port หรือ host ให้เพราะเราจะใช้ Nginx ในการ reverse proxy
     environment:
-      DATABASE_URL: postgresql://myuser:mypassword@postgres:5432/mydb  # Change localhost to postgres
+      DATABASE_URL: postgresql://myuser:mypassword@postgres:5432/mydb # Change localhost to postgres
     depends_on:
       - postgres
     networks:
-      - my_network
-
+      - db_network
+      - web_network
 
   pgadmin-school:
     image: dpage/pgadmin4:latest
@@ -40,24 +38,13 @@ services:
     depends_on:
       - postgres
     networks:
-      - my_network
-
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    restart: always
-    ports:
-      - "80:80"  # Expose Nginx on port 80
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - app
-    networks:
-      - my_network
+      - db_network
 
 volumes:
   postgres_data:
 
 networks:
-  my_network:
+  web_network:
+    driver: bridge
+  db_network:
+    driver: bridge
